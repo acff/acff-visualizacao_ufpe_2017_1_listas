@@ -6,7 +6,24 @@
         <script src="https://d3js.org/d3.v4.min.js"></script>
     </head>
     <body>
-      <svg width="500" height="500"></svg>
+      <svg width="500" height="500">
+      	<!--Brazil's Flat-->
+      	<g>
+	      	<rect width="300" height="200" style="fill:rgb(0,153,0)"/>
+	      	<polygon points="150,20 280,100 150,180 20,100" style="fill:rgb(255,255,51)"/>	
+	      	<circle cx="150" cy="100" r="45" fill="rgb(0,76,153)"/><circle cx="150" cy="100" r="45" fill="white" mask="url(#line)"/>
+	      	<mask id="line">
+	      		<path id="path" d="M 100 95 C 120 90, 160 80, 197 110" stroke="white" stroke-width="9"  />
+	      	</mask>	
+	      	<use xlink:href="#MyPath" fill="none"/>
+
+	      	<text dy="2" font-family="Arial" font-size="6" style="fill:rgb(0,153,0)">
+			    <textPath xlink:href="#path" startOffset="15%">
+			      ORDEM E PROGRESSO
+			    </textPath>
+  			</text>
+      	</g>
+      </svg>
       <script type="text/javascript">
       </script>
     </body>
