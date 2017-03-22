@@ -43,8 +43,8 @@ function generateData(){
   for(i = 0; i < datasetLength; i++){
     var x = getRandom(1, 100);
     var y = getRandom(1, 100);
-    var z = getRandom(1, 100)/10;//raio
-    var w = getRandom(1, 100);//cor
+    var z = getRandom(1, 100)/10;//radius
+    var w = getRandom(1, 100);//color
    
     dataset = dataset.concat([[x ,y, z, w]]);
   }
