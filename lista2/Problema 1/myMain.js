@@ -1,5 +1,5 @@
 var margin = {top: 20, right: 20, bottom: 30, left: 40},
-    width = 960 - margin.left - margin.right,
+    width = 970 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
 
 var svg = d3.select("body").append("svg")
@@ -8,7 +8,20 @@ var svg = d3.select("body").append("svg")
   	.append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-var histogram = new Histogram(0, 0, margin, width, height, svg, 1);
+var histogram = new Histogram(500, 0, margin, width, height, svg, 1);
 
 histogram.setData(trips);
 histogram.generateHistogram();
+
+var myG1 = svg.append("g");
+var myScatterplot1 = new Scatterplot(470, -20, margin, width, height, svg, "sc1");
+
+myScatterplot1.setData(trips);
+
+
+var myDispatch = d3.dispatch("selectionChanged");
+myDispatch.on("selectionChanged",function(){
+	console.log("Update histogram!");
+});
+
+myScatterplot1.dispatch = myDispatch;

@@ -45,7 +45,7 @@ class Histogram{
 		this.data.forEach(function(d) {
     		d.tripsQtd = +d.tripsQtd;
  		});
-
+		console.log(this.data);
 	    this.xScale.domain(this.data.map(function(d) { return d.carrier; }));
   		this.yScale.domain([0, d3.max(this.data, function(d) { return d.tripsQtd; })]);
 
@@ -57,7 +57,7 @@ class Histogram{
 	      .attr("width", that.xScale.bandwidth())
 	      .attr("y", function(d) { return that.yScale(d.tripsQtd); })
 	      .attr("height", function(d) { return that.height - that.yScale(d.tripsQtd); })
-	      .style("fill", "steelblue");
+	      .style("fill", function(d){ return that.setColor(d.carrier)});
 
 	     // add the x Axis
 		svg.append("g")
@@ -68,4 +68,14 @@ class Histogram{
 		svg.append("g")
 		    .call(d3.axisLeft(that.yScale));
 	}
+
+	setColor(carrier){
+    	if (carrier == "Tam"){
+    		return "#8B0000";
+    	}else if (carrier == "Azul"){
+    		return "#6495ED";
+    	}else{
+    		return "#FFA500";
+    	}
+    }
 }
