@@ -21,7 +21,8 @@ myScatterplot1.setData(trips);
 
 var myDispatch = d3.dispatch("selectionChanged");
 myDispatch.on("selectionChanged",function(){
-	console.log("Update histogram!");
+	//console.log("Update histogram!");
+	histogram.refresh(this.objects);
 });
 
 myScatterplot1.dispatch = myDispatch;

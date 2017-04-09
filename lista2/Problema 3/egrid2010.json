@@ -1,5 +1,4 @@
-var egrid = [
-  {
+  [{
     "nameplate": 45,
     "generation": 100981,
     "fuel": "HYDRO",

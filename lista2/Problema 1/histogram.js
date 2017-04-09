@@ -33,10 +33,11 @@ class Histogram{
 				tripsByCarrier[trips[i].carrier] += 1;
 			}
 		}
-
 		for (trips in tripsByCarrier){
 			this.data.push({"carrier":trips, "tripsQtd":tripsByCarrier[trips]});
 		}
+
+		console.log( this.data);
 	}
 
 	generateHistogram(){
@@ -45,7 +46,7 @@ class Histogram{
 		this.data.forEach(function(d) {
     		d.tripsQtd = +d.tripsQtd;
  		});
-		console.log(this.data);
+
 	    this.xScale.domain(this.data.map(function(d) { return d.carrier; }));
   		this.yScale.domain([0, d3.max(this.data, function(d) { return d.tripsQtd; })]);
 
@@ -59,7 +60,7 @@ class Histogram{
 	      .attr("height", function(d) { return that.height - that.yScale(d.tripsQtd); })
 	      .style("fill", function(d){ return that.setColor(d.carrier)});
 
-	     // add the x Axis
+	    // add the x Axis
 		svg.append("g")
 		    .attr("transform", "translate(0," + that.height + ")")
 		    .call(d3.axisBottom(that.xScale));
@@ -78,4 +79,19 @@ class Histogram{
     		return "#FFA500";
     	}
     }
+
+    refresh(values){
+   		var bars = this. container.selectAll(".bar").data(values, function(d) { return d.carrier; }) 
+   		//console.log("VALUES" + values);
+   		//console.log(values);
+   		if (values != []){
+	  		bars.exit().remove();	
+	  		this.setData(values);
+
+	  		//console.log(this.data);
+
+	  		this.generateHistogram();
+   		}
+	}
+
 }
