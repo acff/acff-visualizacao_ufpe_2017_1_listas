@@ -9,27 +9,23 @@ var svg = d3.select("body").append("svg")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 var histogram = new Histogram(500, 0, margin, width, height, svg, 1);
-
 histogram.setData(trips);
 histogram.generateHistogram();
 
-var myG1 = svg.append("g");
-var myScatterplot1 = new Scatterplot(470, -20, margin, width, height, svg, "sc1", trips);
-
-myScatterplot1.setData(trips);
+var scatterplot = new Scatterplot(470, -20, margin, width, height, svg, "sc1", trips);
+scatterplot.setData(trips);
 
 
 var myDispatchFromScatterplot = d3.dispatch("selectionChanged");
-var myDispatch = d3.dispatch("selectionChanged");
+var myDispatchFromHistogram = d3.dispatch("selectionChanged");
 
 myDispatchFromScatterplot.on("selectionChanged",function(){
-	//console.log("Update histogram!");
 	histogram.refresh(this.objects);
 });
 
-myDispatch.on("selectionChanged", function(){
-	myScatterplot1.refresh(this.object);
+myDispatchFromHistogram.on("selectionChanged", function(){
+	scatterplot.refresh(this.object);
 });
 
-myScatterplot1.dispatch = myDispatchFromScatterplot;
-histogram.dispatch = myDispatch;
+scatterplot.dispatch = myDispatchFromScatterplot;
+histogram.dispatch = myDispatchFromHistogram;
