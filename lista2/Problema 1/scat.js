@@ -1,10 +1,11 @@
 class Scatterplot{
-    constructor(x, y, margin, width, height, container, id){
+    constructor(x, y, margin, width, height, container, id, data){
 		this.id = id;
 		this.x = x;
 		this.y = y;
 		this.totalWidth = width;
 		this.totalHeight = height;
+		this.defaultData = data;
 
 		this.margin = margin;
 		this.width = width/2;
@@ -29,38 +30,26 @@ class Scatterplot{
 		var screenSelection = d3.event.selection;
 
 		widget.selectedObjects = [];
-
 		widget.canvas
 		    .selectAll("circle")
 		    .attr("fill",function(d,i){
 				var x = widget.xScale(d.timeDiff);
 				var y = widget.yScale(d.price);
-				if (screenSelection[0][0]<= x 
-					&& x <= screenSelection[1][0] 
-					&& screenSelection[0][1]<= y 
-					&& y <= screenSelection[1][1]) {
+				if (screenSelection[0][0]<= x && x <= screenSelection[1][0] 
+					&& screenSelection[0][1]<= y && y <= screenSelection[1][1]) {
 					    widget.selectedObjects.push(d);
 					    return "#FFFF00";
 				} else {
 					return that.setColor(d.carrier);
-
 				}
-			 });
-
-		widget.dispatch.call("selectionChanged",{caller:widget.id, objects:widget.selectedObjects});
-    }
-
-    /*setSelected(ids){
-		this.canvas.selectAll("circle")
-		    .attr("fill",function(d,i){
-			if(ids.indexOf(i) !== -1){
-			    return "red";
-			}
-			else{
-			    return "black";
-			}
 		});
-    }*/
+		    
+		if (widget.selectedObjects.length != 0){
+			widget.dispatch.call("selectionChanged",{caller:widget.id, objects:widget.selectedObjects});
+		}else{
+			widget.dispatch.call("selectionChanged",{caller:widget.id, objects:this.defaultData});
+		}
+    }
     
     setData(newData){
     	var data = this.setDataScatterplot(newData);
@@ -79,12 +68,10 @@ class Scatterplot{
 		    .attr("r",function(d){return 2;})
 		    .attr("fill", function(d){ return that.setColor(d.carrier)});
 
-		   // add the x Axis
 		this.canvas.append("g")
 		    .attr("transform", "translate(0," + that.height + ")")
 		    .call(d3.axisBottom(that.xScale));
 
-		// add the y Axis
 		this.canvas.append("g")
 		    .call(d3.axisLeft(that.yScale));
     }
@@ -97,6 +84,29 @@ class Scatterplot{
     	}else{
     		return "#FFA500";
     	}
+    }
+
+    refresh(carrier){
+    	var that = this;
+    	var dataset = [];
+    	
+    	this.defaultData.forEach(function(d) {
+    		if(d.carrier == carrier){
+    			dataset.push(d);
+    		}
+ 		});
+ 		
+	    this.canvas.selectAll("circle")
+	      .data(dataset)
+	      .exit().remove();
+	      
+	    this.canvas
+		    .selectAll("circle")
+		    .data(this.setDataScatterplot(dataset))
+		    .attr("cx",function(d){return that.xScale(d.timeDiff);})
+		    .attr("cy",function(d){return that.yScale(d.price);})
+		    .attr("r",function(d){return 2;})
+		    .attr("fill", function(d){ return that.setColor(d.carrier)});
     }
 
     setDataScatterplot(trips){
@@ -115,7 +125,6 @@ class Scatterplot{
 
     timeInterval(datePost, dateStart){
 	    var parseData = d3.timeParse("%d/%m/%Y");
-
 	    return d3.timeDay.count(parseData(datePost), parseData(dateStart));
     }
 }

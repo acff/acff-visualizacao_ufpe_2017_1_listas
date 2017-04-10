@@ -14,15 +14,22 @@ histogram.setData(trips);
 histogram.generateHistogram();
 
 var myG1 = svg.append("g");
-var myScatterplot1 = new Scatterplot(470, -20, margin, width, height, svg, "sc1");
+var myScatterplot1 = new Scatterplot(470, -20, margin, width, height, svg, "sc1", trips);
 
 myScatterplot1.setData(trips);
 
 
+var myDispatchFromScatterplot = d3.dispatch("selectionChanged");
 var myDispatch = d3.dispatch("selectionChanged");
-myDispatch.on("selectionChanged",function(){
+
+myDispatchFromScatterplot.on("selectionChanged",function(){
 	//console.log("Update histogram!");
 	histogram.refresh(this.objects);
 });
 
-myScatterplot1.dispatch = myDispatch;
+myDispatch.on("selectionChanged", function(){
+	myScatterplot1.refresh(this.object);
+});
+
+myScatterplot1.dispatch = myDispatchFromScatterplot;
+histogram.dispatch = myDispatch;
