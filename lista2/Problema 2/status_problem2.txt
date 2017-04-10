@@ -1,0 +1,10 @@
+--DONE
+- Scatterplot com coordenadas x e y 
+- Usar a coordenada z para colorir os pontos com escala qualitativa;
+- Incluir eixos no scatterplot;
+
+
+--UNFINISHED
+- Implementar uma interação de Brush e Zoom
+	- Foi implementado apenas a função de zoom a partir do clique.
+- Use transições (TO DO)

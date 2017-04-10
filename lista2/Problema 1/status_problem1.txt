@@ -1,0 +1,8 @@
+--DONE
+- Histograma com número de viagens aéreas por compainha;
+- Scatterplot eixo X (post e start) e eixo Y (preço da passagem );
+- Scatterplot com ação brush;
+
+--UNFINISHED
+- Histograma com barras tipo checkboxes
+	- Funciona, porém no segundo clique os dados não voltam para configuração default
