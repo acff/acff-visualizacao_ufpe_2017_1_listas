@@ -17,7 +17,6 @@ class Scatterplot{
 		this.canvas.attr("transform","translate("+(this.x+this.margin.left) + "," + (this.y+this.margin.top) + ")");
 		
 		//Scales
-		//REVER ISSOO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     	var k = height / width,
 		    x0 = [-4.5, 4.5],
 		    y0 = [-4.5 * k, 4.5 * k];
@@ -27,13 +26,13 @@ class Scatterplot{
 		this.cScale = d3.scaleOrdinal(d3.schemeCategory10);
 
 		// add the x Axis
-		var xGroup = this.container.append("g")
+		this.xGroup = this.container.append("g")
 		    .attr("transform", "translate(0," + this.height + ")")
 		    .attr("class", "xAxis")
 		    .call(d3.axisBottom(this.xScale));
 
 		// add the y Axis
-		var yGroup = this.container.append("g")
+		this.yGroup = this.container.append("g")
 			.attr("class", "yAxis")
 		    .call(d3.axisLeft(this.yScale));
 
@@ -42,20 +41,17 @@ class Scatterplot{
 		this.brush = d3.brush();
 		this.myBrushGroup = this.canvas.append("g");
 		this.brush(this.myBrushGroup);
-		this.brush.on("brush", function(){
-			that.brushMoved(that);
+		this.brush.on("end", function(){
+			that.brushend(that);
 		});
     }
 
-    brushMoved(widget){
-    	var screenSelection = d3.event.selection;
-    	if (!screenSelection){
-
-    	}
+    brushend(widget){
+    	var s = d3.event.selection;
+    	this.zoomed();
     }
 
     setData(newData){
-		
 		var that = this;
 
 		var myCircles = this.canvas
@@ -68,7 +64,7 @@ class Scatterplot{
 		    .attr("r",function(d){return 2;})
 		    .style("fill", function(d){return that.cScale(d[2])});
     }
-/*
+
     setZoom(){
     	var zoom = d3.zoom()
 		    .scaleExtent([1, 8])
@@ -77,14 +73,21 @@ class Scatterplot{
     }
 
     zoomed(){
+
+      d3.select('.container')
+    	.attr('transform', 'translate(' + d3.event.transform.x + ',' + d3.event.transform.y + ') scale(' + d3.event.transform.k + ')');	
+      d3.select(".xAxis")
+      	.attr('transform', d3.event.transform)
+      	//.call(d3.axisBottom(this.xScale));	
+    	
+    	/*
     	var that = this;
     	var t = this.canvas.transition().duration(750);
-		this.container.select(".xAxis").transition(t).call(this.xAxis);
-		this.container.select(".yAxis").transition(t).call(this.yAxis);
-		this.container.selectAll("circle").transition(t)
-		    .attr("cx", function(d) { return that.xGroup(d[0]); })
-		    .attr("cy", function(d) { return that.yGroup(d[1]); });
-		
+	  	this.canvas.select(".xAxis").transition(t).call(this.xGroup);
+	 	this.canvas.select(".yAxis").transition(t).call(this.yGroup);
+	  	this.canvas.selectAll("circle").transition(t)
+	      .attr("cx", function(d) { return that.xScale(d[0]); })
+	      .attr("cy", function(d) { return that.yScale(d[1]); });
+	    */
     }
-*/
 }
