@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+  <title>Lista 3 - Problema 1</title>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+</head>
+
+<style>
+  .links line {
+    stroke: #999;
+    stroke-opacity: 0.6;
+  }
+
+  .nodes circle {
+    stroke: #fff;
+    stroke-width: 1.5px;
+  }
+</style>
+
+<body>
+    <svg width="960" height="600"></svg>
+</body>
+
+<script>
+
+  var nVizinhos = 5;
+
+  var svg = d3.select("svg"),
+      width = +svg.attr("width"),
+      height = +svg.attr("height");
+
+  var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+  var simulation = d3.forceSimulation()
+      .force("link", d3.forceLink().id(function(d) { return d.id; }))
+      .force("charge", d3.forceManyBody())
+      .force("center", d3.forceCenter(width / 2, height / 2));
+
+  d3.json("iris.json", function(error, nodes) {
+    if (error) throw error;
+    var dataLink = getLinks(nodes);
+
+    var node = svg.append("g")
+        .attr("class", "nodes")
+        .selectAll("circle")
+        .data(nodes)
+        .enter()
+        .append("circle")
+        .attr("r", 5)
+        .attr("fill", function(d){ return colorScale(d.species); })
+        .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended));;
+
+    var link = svg.append("g")
+      .attr("class", "links")
+      .selectAll("line")
+      .data(dataLink)
+      .enter().append("line")
+      .attr("stroke-width", function(d) { return 2; });
+
+    simulation
+        .nodes(nodes)
+        .on("tick", ticked);
+
+    simulation
+        .force("link")
+        .links(dataLink);
+    function existsObj (links, source, target){
+        //debugger;
+        var result = [];
+        for (var i = 0; i < links.length; i++) {
+            if(links[i].source == target && links[i].target == source){
+                return true;
+            }
+        };
+
+        return false;
+    }
+
+    function getLinks(data){
+        var result = [];
+        var links = findClosest(data);
+        var numVizinhos = new Uint8Array(data.length);
+       //debugger;
+        for (var i = 0; i < links.length; i++) {
+            console.log("numVizinhos " + numVizinhos);
+            console.log("source " + links[i].source + " target" + links[i].target);
+            //debugger;
+            if(numVizinhos[links[i].source] < 2){
+                if(!existsObj(result, links[i].source, links[i].target)){
+                    numVizinhos[links[i].source] += 1;
+                    numVizinhos[links[i].target] += 1;
+                    result.push(links[i]);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    function findClosest(irisjson){
+
+        var result = [];
+        //Calculate Euc. Dist
+        for(var i=0; i < irisjson.length; i++){
+            for(var j = 0; j < irisjson.length ; j++){
+                if (i != j){
+                    var a1, a2 , a3 , a4 ;
+
+                    a1 = irisjson[i].sepal_length - irisjson[j].sepal_length;
+
+                    a2 = irisjson[i].sepal_width - irisjson[j].sepal_width;
+
+                    a3 = irisjson[i].petal_length - irisjson[j].petal_length;
+
+                    a4 = irisjson[i].petal_width - irisjson[j].petal_width;
+
+                    a1_diff = Math.pow(a1, 2);
+                    a2_diff = Math.pow(a2, 2);
+                    a3_diff = Math.pow(a3, 2);
+                    a4_diff = Math.pow(a4, 2);
+
+                    sum = a1_diff + a2_diff + a3_diff + a4_diff;
+
+                    result.push({"source": i , "target": j, "value": Math.sqrt(sum)});
+                }
+            }
+        }
+
+        result = result.sort(function(a, b){
+            return a.value - b.value;
+        });
+        //debugger;
+        return result;
+    }
+
+    function colorScale(specie){
+        if(specie === "setosa"){
+            return "blue";
+        }else{
+            return "green";
+        }
+    }
+
+    function ticked() {
+      link
+          .attr("x1", function(d) { return d.source.x; })
+          .attr("y1", function(d) { return d.source.y; })
+          .attr("x2", function(d) { return d.target.x; })
+          .attr("y2", function(d) { return d.target.y; });
+
+      node
+          .attr("cx", function(d) { return d.x; })
+          .attr("cy", function(d) { return d.y; });
+    }
+
+/*
+    var link = svg.append("g")
+      .attr("class", "links")
+      .selectAll("line")
+      .data(graph.links)
+      .enter().append("line")
+      .attr("stroke-width", function(d) { return Math.sqrt(d.value); });
+
+    var node = svg.append("g")
+      .attr("class", "nodes")
+      .selectAll("circle")
+      .data(graph.nodes)
+      .enter().append("circle")
+      .attr("r", 5)
+      .attr("fill", function(d) { return color(d.group); })
+      .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended));
+
+    node.append("title")
+        .text(function(d) { return d.id; });
+
+    simulation
+        .nodes(graph.nodes)
+        .on("tick", ticked);
+
+    simulation.force("link")
+        .links(graph.links);
+
+    function ticked() {
+      link
+          .attr("x1", function(d) { return d.source.x; })
+          .attr("y1", function(d) { return d.source.y; })
+          .attr("x2", function(d) { return d.target.x; })
+          .attr("y2", function(d) { return d.target.y; });
+
+      node
+          .attr("cx", function(d) { return d.x; })
+          .attr("cy", function(d) { return d.y; });
+    }
+*/
+  });
+
+  function dragstarted(d) {
+    if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
+  }
+
+  function dragged(d) {
+    d.fx = d3.event.x;
+    d.fy = d3.event.y;
+  }
+
+  function dragended(d) {
+    if (!d3.event.active) simulation.alphaTarget(0);
+    d.fx = null;
+    d.fy = null;
+  }
+
+</script>
