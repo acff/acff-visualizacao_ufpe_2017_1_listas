@@ -18,16 +18,31 @@
 </style>
 
 <body>
-    <svg width="960" height="600"></svg>
+  <h4>Selecione o número de vizinhos: </h4>
+  <svg width="960" height="600"></svg>
 </body>
 
 <script>
 
-  var nVizinhos = 5;
+  var n = 5;
+  var data = [];
 
   var svg = d3.select("svg"),
       width = +svg.attr("width"),
       height = +svg.attr("height");
+
+  var options = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+
+  d3.select("h4")
+    .append("select")
+    .on('change',function(){n = this.value;})
+    .selectAll("option").data(options)
+    .enter()
+    .append("option")
+    .text(String);
+
+  var select_n = svg.append("select");
+  var options = select_n.append("option").attr("value","Ana");
 
   var color = d3.scaleOrdinal(d3.schemeCategory20);
 
