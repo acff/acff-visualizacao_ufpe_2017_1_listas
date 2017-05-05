@@ -15,6 +15,24 @@
     stroke: #fff;
     stroke-width: 1.5px;
   }
+
+  div.tooltip {
+    position: absolute;
+    text-align: center;
+    width: 90px;
+    height: 30px;
+    padding: 2px;
+    font: 12px Verdana;
+    background: #a1a1ff;
+    border: 0px;
+    border-radius: 8px;
+    pointer-events: none;
+  }
+
+  d3-tip {
+    line-height: 1;
+    color: black;
+  }   
 </style>
 
 <body>
@@ -24,36 +42,44 @@
 
 <script>
 
-  var n = 5;
-  var data = [];
+  var n = 2; //Nearest neighbour
+  var data = []; //All nodes
+  var all_links =[]; //All links and euclidian distance
+  var dataLink = []; //Top N links by nodes
 
   var svg = d3.select("svg"),
       width = +svg.attr("width"),
       height = +svg.attr("height");
 
-  var options = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+  var options = [2, 3, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 
   d3.select("h4")
     .append("select")
-    .on('change',function(){n = this.value;})
-    .selectAll("option").data(options)
-    .enter()
-    .append("option")
-    .text(String);
-
-  var select_n = svg.append("select");
-  var options = select_n.append("option").attr("value","Ana");
+    .on('change',function(){updateGraph(n, parseInt(this.value));})
+    .selectAll("option")
+      .data(options)
+      .enter()
+      .append("option")
+      .text(String);
 
   var color = d3.scaleOrdinal(d3.schemeCategory20);
 
   var simulation = d3.forceSimulation()
-      .force("link", d3.forceLink().id(function(d) { return d.id; }))
-      .force("charge", d3.forceManyBody())
-      .force("center", d3.forceCenter(width / 2, height / 2));
+    .force("link", d3.forceLink().id(function(d) { return d.index; }).distance(25))
+    .force("charge", d3.forceManyBody())
+    .force("center", d3.forceCenter(width / 2, height / 2));
 
+  var tooltip = d3.select("h4").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0); 
+
+  //Read json (dataset)
   d3.json("iris.json", function(error, nodes) {
     if (error) throw error;
-    var dataLink = getLinks(nodes);
+
+    data = nodes;
+    all_links = euclidenDistanceCalculate(nodes);
+    dataLink = kNearestNeighborsLinks(n);
 
     var node = svg.append("g")
         .attr("class", "nodes")
@@ -61,19 +87,27 @@
         .data(nodes)
         .enter()
         .append("circle")
-        .attr("r", 5)
-        .attr("fill", function(d){ return colorScale(d.species); })
+        .attr("r", 6)
+        .attr("fill", function(d){ return colorScale(d.species);})
         .call(d3.drag()
           .on("start", dragstarted)
           .on("drag", dragged)
-          .on("end", dragended));;
+          .on("end", dragended));
+
+    node.on("mouseover", function(d) { 
+         tooltip.transition()
+           .style("opacity", .9);
+         tooltip.html(d.species+ "<br/>id: " + d.index)
+           .style("left", 880 + "px")
+           .style("top", "0px")
+           .style("margin-top", "15px");})
 
     var link = svg.append("g")
       .attr("class", "links")
       .selectAll("line")
       .data(dataLink)
       .enter().append("line")
-      .attr("stroke-width", function(d) { return 2; });
+      .attr("stroke-width", function(d) { return 1; });
 
     simulation
         .nodes(nodes)
@@ -82,82 +116,6 @@
     simulation
         .force("link")
         .links(dataLink);
-    function existsObj (links, source, target){
-        //debugger;
-        var result = [];
-        for (var i = 0; i < links.length; i++) {
-            if(links[i].source == target && links[i].target == source){
-                return true;
-            }
-        };
-
-        return false;
-    }
-
-    function getLinks(data){
-        var result = [];
-        var links = findClosest(data);
-        var numVizinhos = new Uint8Array(data.length);
-       //debugger;
-        for (var i = 0; i < links.length; i++) {
-            console.log("numVizinhos " + numVizinhos);
-            console.log("source " + links[i].source + " target" + links[i].target);
-            //debugger;
-            if(numVizinhos[links[i].source] < 2){
-                if(!existsObj(result, links[i].source, links[i].target)){
-                    numVizinhos[links[i].source] += 1;
-                    numVizinhos[links[i].target] += 1;
-                    result.push(links[i]);
-                }
-            }
-        }
-
-        return result;
-    }
-
-    function findClosest(irisjson){
-
-        var result = [];
-        //Calculate Euc. Dist
-        for(var i=0; i < irisjson.length; i++){
-            for(var j = 0; j < irisjson.length ; j++){
-                if (i != j){
-                    var a1, a2 , a3 , a4 ;
-
-                    a1 = irisjson[i].sepal_length - irisjson[j].sepal_length;
-
-                    a2 = irisjson[i].sepal_width - irisjson[j].sepal_width;
-
-                    a3 = irisjson[i].petal_length - irisjson[j].petal_length;
-
-                    a4 = irisjson[i].petal_width - irisjson[j].petal_width;
-
-                    a1_diff = Math.pow(a1, 2);
-                    a2_diff = Math.pow(a2, 2);
-                    a3_diff = Math.pow(a3, 2);
-                    a4_diff = Math.pow(a4, 2);
-
-                    sum = a1_diff + a2_diff + a3_diff + a4_diff;
-
-                    result.push({"source": i , "target": j, "value": Math.sqrt(sum)});
-                }
-            }
-        }
-
-        result = result.sort(function(a, b){
-            return a.value - b.value;
-        });
-        //debugger;
-        return result;
-    }
-
-    function colorScale(specie){
-        if(specie === "setosa"){
-            return "blue";
-        }else{
-            return "green";
-        }
-    }
 
     function ticked() {
       link
@@ -170,50 +128,99 @@
           .attr("cx", function(d) { return d.x; })
           .attr("cy", function(d) { return d.y; });
     }
+  });
+  
+  //Get k nearest neighbors for all nodes on dataset
+  function kNearestNeighborsLinks(n){
+      var result = [];
+      var numVizinhos = new Uint8Array(data.length);
+      debugger;
+      for (var i = 0; i < all_links.length; i++) {
+        if(numVizinhos[all_links[i].source] < n){
+          numVizinhos[all_links[i].source] += 1;
+          console.log(all_links[i].source + ' -> ' + all_links[i].target);
+          result.push(all_links[i]);            
+        }
+      }
+      console.log(numVizinhos);
+      return result;
+  }
 
-/*
-    var link = svg.append("g")
-      .attr("class", "links")
-      .selectAll("line")
-      .data(graph.links)
-      .enter().append("line")
-      .attr("stroke-width", function(d) { return Math.sqrt(d.value); });
+  //Calculate Euc. Distance and return all links 
+  function euclidenDistanceCalculate(nodes){
+    var result = [];
 
-    var node = svg.append("g")
-      .attr("class", "nodes")
-      .selectAll("circle")
-      .data(graph.nodes)
-      .enter().append("circle")
-      .attr("r", 5)
-      .attr("fill", function(d) { return color(d.group); })
-      .call(d3.drag()
-          .on("start", dragstarted)
-          .on("drag", dragged)
-          .on("end", dragended));
+    for(var i=0; i < nodes.length; i++){          
+      for(var j = 0; j < nodes.length ; j++){
+          if (i == j){
+            continue;
+          }
 
-    node.append("title")
-        .text(function(d) { return d.id; });
+          var a1, a2 , a3 , a4 ;
+
+          a1 = nodes[i].sepal_length - nodes[j].sepal_length;
+
+          a2 = nodes[i].sepal_width - nodes[j].sepal_width;
+
+          a3 = nodes[i].petal_length - nodes[j].petal_length;
+
+          a4 = nodes[i].petal_width - nodes[j].petal_width;
+
+          a1_diff = Math.pow(a1, 2);
+          a2_diff = Math.pow(a2, 2);
+          a3_diff = Math.pow(a3, 2);
+          a4_diff = Math.pow(a4, 2);
+
+          sum = a1_diff + a2_diff + a3_diff + a4_diff;
+
+          result.push({"source": i , "target": j, "value": Math.sqrt(sum)});
+          //console.log("source: " + i + " target: " + j + " value: " + Math.sqrt(sum));
+      }
+    }
+
+    //Order result by distance value
+    result = result.sort(function(a, b){
+        return a.value - b.value;
+    });
+    debugger;
+    return result;
+  }
+
+  function colorScale(specie){
+      if(specie === "setosa"){
+          return "blue";
+      }else{
+          return "green";
+      }
+  }
+
+  function updateGraph(n_curr, n_att){
+    dataLink = kNearestNeighborsLinks(n_att);// Get N neighbors for all nodes
+
+    if(n_att > n_curr){ //Add new links
+      svg.selectAll("line")
+        .data(dataLink)
+        .enter().append("line")
+        .attr("stroke-width", function(d) { return 1; });
+    }else if(n_att < n_curr){ //Remove links
+      svg
+        .selectAll("line")
+        .data(dataLink)
+        .exit().remove();
+    }
+
+    //Update links
+    svg.selectAll("line")
+        .data(dataLink)
+        .append("line")
+        .attr("stroke-width", function(d) { return 1; });
 
     simulation
-        .nodes(graph.nodes)
-        .on("tick", ticked);
+      .force("link")
+      .links(dataLink);
 
-    simulation.force("link")
-        .links(graph.links);
-
-    function ticked() {
-      link
-          .attr("x1", function(d) { return d.source.x; })
-          .attr("y1", function(d) { return d.source.y; })
-          .attr("x2", function(d) { return d.target.x; })
-          .attr("y2", function(d) { return d.target.y; });
-
-      node
-          .attr("cx", function(d) { return d.x; })
-          .attr("cy", function(d) { return d.y; });
-    }
-*/
-  });
+    n = n_att; //Update n 
+  }
 
   function dragstarted(d) {
     if (!d3.event.active) simulation.alphaTarget(0.3).restart();
@@ -231,5 +238,4 @@
     d.fx = null;
     d.fy = null;
   }
-
 </script>
