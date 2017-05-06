@@ -6,16 +6,7 @@
 </head>
 
 <style>
-  .links line {
-    stroke: #999;
-    stroke-opacity: 0.6;
-  }
-
-  .nodes circle {
-    stroke: #fff;
-    stroke-width: 1.5px;
-  }
-
+  
   div.tooltip {
     position: absolute;
     text-align: center;
@@ -65,9 +56,11 @@
   var color = d3.scaleOrdinal(d3.schemeCategory20);
 
   var simulation = d3.forceSimulation()
-    .force("link", d3.forceLink().id(function(d) { return d.index; }).distance(25))
+    .force("link", d3.forceLink().id(function(d) { return d.id; }))
     .force("charge", d3.forceManyBody())
-    .force("center", d3.forceCenter(width / 2, height / 2));
+    .force("center", d3.forceCenter(width / 2, height / 2))
+    .force("forceX", d3.forceX(600).strength(0.06))
+    .force("forceY", d3.forceY(300).strength(0.06));
 
   var tooltip = d3.select("h4").append("div")
     .attr("class", "tooltip")

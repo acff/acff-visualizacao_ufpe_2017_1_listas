@@ -47,7 +47,7 @@ var treemap = d3.treemap()
     .padding(1)
     .round(true);
 
-d3.csv("flare.csv", type, function(error, data) {
+d3.csv("prefeitura.csv", type, function(error, data) {
   if (error) throw error;
 
   var root = stratify(data)
@@ -55,6 +55,7 @@ d3.csv("flare.csv", type, function(error, data) {
       .sort(function(a, b) { return b.height - a.height || b.value - a.value; });
 
   treemap(root);
+  console.log(root);
 
   d3.select("body")
     .selectAll(".node")
