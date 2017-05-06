@@ -77,14 +77,27 @@
   d3.json("iris.json", function(error, nodes) {
     if (error) throw error;
 
-    data = nodes;
+    data = getNodes(nodes);
     all_links = euclidenDistanceCalculate(nodes);
-    dataLink = kNearestNeighborsLinks(n);
+   // dataLink = kNearestNeighborsLinks(n);
+
+    //var numVizinhos = new Uint8Array(data.length);
+    for(i = 0; i < data.length; i++){
+      var neighbors = 0;
+      for(j = 0; j < all_links.length && neighbors < n; j++){
+        if(all_links[j].source == i ){
+          neighbors += 1;
+          dataLink.push(all_links[j]);
+        }
+      }
+    }
+
+    var dataset = {"nodes":nodes, "links":dataLink}
 
     var node = svg.append("g")
         .attr("class", "nodes")
         .selectAll("circle")
-        .data(nodes)
+        .data(dataset.nodes)
         .enter()
         .append("circle")
         .attr("r", 6)
@@ -105,17 +118,17 @@
     var link = svg.append("g")
       .attr("class", "links")
       .selectAll("line")
-      .data(dataLink)
+      .data(dataset.links)
       .enter().append("line")
       .attr("stroke-width", function(d) { return 1; });
 
     simulation
-        .nodes(nodes)
+        .nodes(dataset.nodes)
         .on("tick", ticked);
 
     simulation
         .force("link")
-        .links(dataLink);
+        .links(dataset.links);
 
     function ticked() {
       link
@@ -129,20 +142,44 @@
           .attr("cy", function(d) { return d.y; });
     }
   });
-  
+
+  function getNodes(nodes){
+    var result = [];
+
+    for (i = 0; i < nodes.length; i++){
+      result.push({"id":i, "species":color(nodes.species)});
+    }
+
+    return result;
+  }
   //Get k nearest neighbors for all nodes on dataset
   function kNearestNeighborsLinks(n){
       var result = [];
-      var numVizinhos = new Uint8Array(data.length);
-      debugger;
-      for (var i = 0; i < all_links.length; i++) {
-        if(numVizinhos[all_links[i].source] < n){
-          numVizinhos[all_links[i].source] += 1;
-          console.log(all_links[i].source + ' -> ' + all_links[i].target);
-          result.push(all_links[i]);            
+      //var numVizinhos = new Uint8Array(data.length);
+      //debugger;
+      for(i = 0; i < data.length; i++){
+        var neighbors = 0;
+
+        for(j = 0; j < all_links.length && neighbors < n; j++){
+          if(all_links[j].source.index != undefined){
+            if(all_links[j].source.index == i ){
+              neighbors += 1;
+              result.push({"source":all_links[j].source.index,
+                           "target":all_links[j].target.index,
+                           "value":all_links[j].value});
+              console.log("source - " +all_links[j].source.index + " target - " + all_links[j].target.index);
+            }
+          } else{
+            if(all_links[j].source == i ){
+              neighbors += 1;
+              console.log("source - " +all_links[j].source + " target - " + all_links[j].target);
+              result.push(all_links[j]);
+            }
+          }
         }
       }
-      console.log(numVizinhos);
+      //debugger;
+    
       return result;
   }
 
@@ -173,7 +210,7 @@
 
           sum = a1_diff + a2_diff + a3_diff + a4_diff;
 
-          result.push({"source": i , "target": j, "value": Math.sqrt(sum)});
+          result.push({"source": i , "target": j, "value": Math.sqrt(sum).toFixed(5)});
           //console.log("source: " + i + " target: " + j + " value: " + Math.sqrt(sum));
       }
     }
@@ -182,7 +219,7 @@
     result = result.sort(function(a, b){
         return a.value - b.value;
     });
-    debugger;
+    //debugger;
     return result;
   }
 
@@ -196,28 +233,27 @@
 
   function updateGraph(n_curr, n_att){
     dataLink = kNearestNeighborsLinks(n_att);// Get N neighbors for all nodes
+    debugger;
+    //console.log(dataLink.length);
+    var link = svg.select(".links").selectAll("line").data(dataLink);
+    //var node  = svg.select(".nodes").selectAll("circle").data(data);
+      link.exit().remove();
+      link = link.enter()
+                .append("line")
+                .attr("stroke-width", function(d) { return 1; })
+                .merge(link);
 
-    if(n_att > n_curr){ //Add new links
-      svg.selectAll("line")
-        .data(dataLink)
-        .enter().append("line")
-        .attr("stroke-width", function(d) { return 1; });
-    }else if(n_att < n_curr){ //Remove links
-      svg
-        .selectAll("line")
-        .data(dataLink)
-        .exit().remove();
-    }
+      //node.exit().remove();
+      //node = node.enter()
+                //.append("circle")
+                //.merge(node);     
+ 
 
-    //Update links
-    svg.selectAll("line")
-        .data(dataLink)
-        .append("line")
-        .attr("stroke-width", function(d) { return 1; });
-
-    simulation
-      .force("link")
-      .links(dataLink);
+      // Update and restart the simulation.
+     // simulation.nodes(data);
+      simulation.force("link")
+        .links(dataLink);      
+      simulation.alpha(1).restart();
 
     n = n_att; //Update n 
   }
