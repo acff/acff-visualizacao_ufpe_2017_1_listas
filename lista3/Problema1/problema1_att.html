@@ -16,23 +16,15 @@
     stroke-width: 1.5px;
   }
 
-  div.tooltip {
-    position: absolute;
-    text-align: center;
-    width: 100px;
-    height: 50px;
-    padding: 2px;
-    font: 12px Verdana;
-    background: #a1a1ff;
-    border: 0px;
-    border-radius: 8px;
-    pointer-events: none;
+  #subtitle{
+    margin-left:30%;
   }
 </style>
 
 <body>
   <h4>Selecione o número de vizinhos: </h4>
-  <svg width="960" height="600"></svg>
+  <svg id="subtitle" width="960" height="50"></svg>
+  <svg id="forceGraph" width="960" height="600"></svg>
 </body>
 
 <script>
@@ -42,15 +34,13 @@
   var data = {"nodes":[], "links":[]};
   var options = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 
-  var svg = d3.select("svg"),
+  var svg_subtitle = d3.select("#subtitle");
+
+  var svg = d3.select("#forceGraph"),
     width = +svg.attr("width"),
     height = +svg.attr("height");
 
   var color = d3.scaleOrdinal(d3.schemeCategory20);
-
-  var tooltip = d3.select("h4").append("div")
-    .attr("class", "tooltip")
-    .style("opacity", 0); 
 
   var simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(function(d) { return d.index; }).distance(30))
@@ -68,6 +58,8 @@
     .attr("class", "nodes")
     .selectAll("circle");
 
+  createSubtitle(svg_subtitle);
+
   d3.select("h4")
     .append("select")
     .on('change',function(){updateGraph(n, parseInt(this.value));})
@@ -76,6 +68,20 @@
       .enter()
       .append("option")
       .text(String);
+/*
+  d3.select("svg")
+    .append("rect")
+    .attr("x", 0)
+    .attr("y", 0)
+    .attr("width", 10)
+    .attr("height", 10)
+    .style("fill", color("setosa"));
+  d3.select("svg")
+    .append("text")
+    .attr("x", 10)
+    .attr("y", 10)
+    .style("font-size", "13px")
+    .text("Setosa");*/
 
   //Read json (dataset)
   d3.json("iris.json", function(error, dataJson) {
@@ -154,13 +160,6 @@
         .on("drag", dragged)
         .on("end", dragended))
       .merge(node);
-    node.on("mouseover", function(d) { 
-         tooltip.transition()
-           .style("opacity", .9);
-         tooltip.html(d.species+ "<br/>id: " + d.index)
-           .style("left", 880 + "px")
-           .style("top", "0px")
-           .style("margin-top", "15px");})
 
     // Update links.
     link = link.data(data.links);
@@ -217,6 +216,24 @@
     node
         .attr("cx", function(d) { return d.x; })
         .attr("cy", function(d) { return d.y; });
+  }
+
+
+  function createSubtitle(svg) {
+    var species = ["setosa", "versicolor", "virginica"];
+    for(var i=0; i<species.length; i++) {
+      svg.append('rect')
+        .attr("fill", color(species[i]))
+        .attr('x', i*150)
+        .attr('y', 0)
+        .attr("width", 20)
+        .attr("height", 20);
+
+      svg.append("text")
+        .attr('x', 20 + i*150)
+        .attr("y", 15)
+        .text(species[i].charAt(0).toUpperCase() + species[i].slice(1));
+    }
   }
 
   function dragstarted(d) {
