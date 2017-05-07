@@ -30,8 +30,8 @@ body {
 <script src="//d3js.org/d3.v4.min.js"></script>
 <script>
 
-var width = 1500,
-    height = 720;
+var width = 1700,
+    height = 900;
 
 var format = d3.format(",d");
 
@@ -47,15 +47,27 @@ var treemap = d3.treemap()
     .padding(1)
     .round(true);
 
-d3.csv("prefeitura.csv", type, function(error, data) {
-  if (error) throw error;
+var organs = ["GABINETE DO PREFEITO", "GABINETE DO VICE-PREFEITO", "SECRETARIA DE EDUCAÇÃO", "SECRETARIA DE MOBILIDADE E CONTROLE URBANO", "SECRETARIA DE SAÚDE", "SECRETARIA DE MULHER", "SECRETARIA DE HABITAÇÃO", "SECRETARIA DE ENFRENTAMENTO AO CRACK E OUTRAS DROGAS", "SECRETARIA DE IMPRENSA", "SECRETARIA DE JUVENTUDE E QUALIFICAÇÃO PROFISSIONAL"];
 
-  var root = stratify(data)
+d3.csv("dataFilter.csv", type, function(error, data) {
+  if (error) throw error;
+  var dataset = [];
+  
+  for(i = 0; i < data.length; i++){
+    var a = data[i].id.substring(data[i].id.indexOf(".")+1, data[i].id.length);
+    var b = a.substring(0, a.indexOf("."))
+    if(data[i].id.split(".").length - 1 < 2){
+      dataset.push(data[i]);
+    }else if(organs.indexOf(b) > -1){
+      dataset.push(data[i]);
+    }
+  }
+
+  var root = stratify(dataset)
       .sum(function(d) { return d.value; })
       .sort(function(a, b) { return b.height - a.height || b.value - a.value; });
 
   treemap(root);
-  console.log(root);
 
   d3.select("body")
     .selectAll(".node")
