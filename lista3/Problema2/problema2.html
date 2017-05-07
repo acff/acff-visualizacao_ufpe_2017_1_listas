@@ -30,8 +30,8 @@ body {
 <script src="//d3js.org/d3.v4.min.js"></script>
 <script>
 
-var width = 1000,
-    height = 600;
+var width = 1500,
+    height = 720;
 
 var format = d3.format(",d");
 
@@ -40,7 +40,7 @@ var color = d3.scaleOrdinal()
         .map(function(c) { c = d3.rgb(c); c.opacity = 0.6; return c; }));
 
 var stratify = d3.stratify()
-    .parentId(function(d) {debugger; return d.id.substring(0, d.id.lastIndexOf(".")); });
+    .parentId(function(d) { return d.id.substring(0, d.id.lastIndexOf(".")); });
 
 var treemap = d3.treemap()
     .size([width, height])
@@ -59,7 +59,7 @@ d3.csv("prefeitura.csv", type, function(error, data) {
 
   d3.select("body")
     .selectAll(".node")
-    .data(root.leaves())
+    .data(root.children)
     .enter().append("div")
       .attr("class", "node")
       .attr("title", function(d) { return d.id + "\n" + format(d.value); })
@@ -70,7 +70,7 @@ d3.csv("prefeitura.csv", type, function(error, data) {
       .style("background", function(d) { while (d.depth > 1) d = d.parent; return color(d.id); })
     .append("div")
       .attr("class", "node-label")
-      .text(function(d) { return d.id.substring(d.id.lastIndexOf(".") + 1).split(/(?=[A-Z][^A-Z])/g).join("\n"); })
+      .text(function(d) { return d.id.substring(d.id.lastIndexOf(".") + 1); })
     .append("div")
       .attr("class", "node-value")
       .text(function(d) { return format(d.value); });
